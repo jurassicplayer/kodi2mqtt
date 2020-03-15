@@ -6,6 +6,7 @@ import xbmc,xbmcaddon
 import json
 import threading
 import time
+import os
 import socket
 
 __addon__      = xbmcaddon.Addon()
@@ -149,6 +150,7 @@ class MQTTMonitor(xbmc.Monitor):
         startmqtt()
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     def onNotification(self,sender,method,value):
         publish("notification/"+method,value,None)
 =======
@@ -161,6 +163,14 @@ class MQTTMonitor(xbmc.Monitor):
             import traceback
             mqttlogging("MQTT: "+traceback.format_exc())	
 >>>>>>> e38ca10d4c032a3e1d7784d81e56cd8a4a7c308b
+=======
+    def onScreensaverActivated(self):
+        publish("screensaver",1,"")
+
+    def onScreensaverDeactivated(self):
+        publish("screensaver",0,"")
+
+>>>>>>> 66b65f19d7ba0ea34deaa6a694256de9c6d64289
 
 class MQTTPlayer(xbmc.Player):
 
@@ -224,8 +234,13 @@ def processplaybackstate(data):
     global playbackstate
     if data=="0" or data=="stop":
         player.stop()
+<<<<<<< HEAD
     elif data=="1" or data=="resume" or data=="play":
         if playbackstate==2:
+=======
+    elif data=="1" or data=="resume":
+        if player.isPlaying():
+>>>>>>> 66b65f19d7ba0ea34deaa6a694256de9c6d64289
             player.pause()
         elif playbackstate!=1:
             player.play()
@@ -256,6 +271,12 @@ def processsendcomand(data):
     except ValueError:
         mqttlogging("MQTT: JSON-RPC call ValueError")
 
+def processcecstate(data):
+	if data=="1" or data=="activate":
+		#Stupid workaround to wake TV
+		mqttlogging("CEC Activate")
+		os.system('kodi-send --action=""')
+
 def processcommand(topic,data):
     if topic=="notify":
         processnotify(data)
@@ -263,12 +284,17 @@ def processcommand(topic,data):
         processplay(data)
     elif topic=="playbackstate":
         processplaybackstate(data)
+<<<<<<< HEAD
     elif topic=="progress":
         processprogress(data)
     elif topic=="api":
         processsendcomand(data)
     elif topic=="volume":
         processvolume(data)
+=======
+    elif topic=="cecstate":
+        processcecstate(data)
+>>>>>>> 66b65f19d7ba0ea34deaa6a694256de9c6d64289
     else:
         mqttlogging("MQTT: Unknown command "+topic)
 
