@@ -142,8 +142,19 @@ class MQTTMonitor(xbmc.Monitor):
         load_settings()
         startmqtt()
 
+<<<<<<< HEAD
     def onNotification(self,sender,method,value):
         publish("notification/"+method,value,None)
+=======
+    def onNotification(self, sender, method, data):
+    # fix for netflixaddon - so that start notification 
+        try:
+            if method == 'Player.OnAVStart':
+                setplaystate(1,"started")
+        except Exception:
+            import traceback
+            mqttlogging("MQTT: "+traceback.format_exc())	
+>>>>>>> e38ca10d4c032a3e1d7784d81e56cd8a4a7c308b
 
 class MQTTPlayer(xbmc.Player):
 
