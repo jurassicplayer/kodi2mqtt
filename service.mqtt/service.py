@@ -149,28 +149,22 @@ class MQTTMonitor(xbmc.Monitor):
         load_settings()
         startmqtt()
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     def onNotification(self,sender,method,value):
         publish("notification/"+method,value,None)
-=======
     def onNotification(self, sender, method, data):
-    # fix for netflixaddon - so that start notification 
+    # fix for netflixaddon - so that start notification
         try:
             if method == 'Player.OnAVStart':
                 setplaystate(1,"started")
         except Exception:
             import traceback
-            mqttlogging("MQTT: "+traceback.format_exc())	
->>>>>>> e38ca10d4c032a3e1d7784d81e56cd8a4a7c308b
-=======
+            mqttlogging("MQTT: "+traceback.format_exc())
     def onScreensaverActivated(self):
         publish("screensaver",1,"")
 
     def onScreensaverDeactivated(self):
         publish("screensaver",0,"")
 
->>>>>>> 66b65f19d7ba0ea34deaa6a694256de9c6d64289
 
 class MQTTPlayer(xbmc.Player):
 
@@ -234,13 +228,10 @@ def processplaybackstate(data):
     global playbackstate
     if data=="0" or data=="stop":
         player.stop()
-<<<<<<< HEAD
     elif data=="1" or data=="resume" or data=="play":
         if playbackstate==2:
-=======
     elif data=="1" or data=="resume":
         if player.isPlaying():
->>>>>>> 66b65f19d7ba0ea34deaa6a694256de9c6d64289
             player.pause()
         elif playbackstate!=1:
             player.play()
@@ -272,10 +263,10 @@ def processsendcomand(data):
         mqttlogging("MQTT: JSON-RPC call ValueError")
 
 def processcecstate(data):
-	if data=="1" or data=="activate":
-		#Stupid workaround to wake TV
-		mqttlogging("CEC Activate")
-		os.system('kodi-send --action=""')
+    if data=="1" or data=="activate":
+    	#Stupid workaround to wake TV
+    	mqttlogging("CEC Activate")
+    	os.system('kodi-send --action=""')
 
 def processcommand(topic,data):
     if topic=="notify":
@@ -284,17 +275,14 @@ def processcommand(topic,data):
         processplay(data)
     elif topic=="playbackstate":
         processplaybackstate(data)
-<<<<<<< HEAD
     elif topic=="progress":
         processprogress(data)
     elif topic=="api":
         processsendcomand(data)
     elif topic=="volume":
         processvolume(data)
-=======
     elif topic=="cecstate":
         processcecstate(data)
->>>>>>> 66b65f19d7ba0ea34deaa6a694256de9c6d64289
     else:
         mqttlogging("MQTT: Unknown command "+topic)
 
