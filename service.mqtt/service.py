@@ -39,13 +39,19 @@ def ignorelist(data,val):
 
 def mqttlogging(log):
     if  __addon__.getSetting("mqttdebug")=='true':
-        xbmc.log(log)
+        #xbmc.log(log)
+        xbmc.log(log,level=xbmc.LOGNOTICE)
 
 def sendrpc(method,params):
     res=xbmc.executeJSONRPC(json.dumps({"jsonrpc":"2.0","method":method,"params":params,"id":1}))
     mqttlogging("MQTT: JSON-RPC call "+method+" returned "+res)
     return json.loads(res)
 
+def setvol(data):
+    params=json.loads('{"volume":' + str(data) + '}')
+    sendrpc("Application.SetVolume",params)
+    #res=xbmc.executebuiltin("XBMC.SetVolume("+data+")")
+    xbmc.log(data)
 #
 # Publishes a MQTT message. The topic is built from the configured
 # topic prefix and the suffix. The message itself is JSON encoded,
@@ -136,10 +142,13 @@ class MQTTMonitor(xbmc.Monitor):
         load_settings()
         startmqtt()
 
+    def onNotification(self,sender,method,value):
+        publish("notification/"+method,value,None)
+
 class MQTTPlayer(xbmc.Player):
 
-    def onPlayBackStarted(self):
-        setplaystate(1,"started")
+    def onAVStarted(self):
+        setplaystate(1, "started")
 
     def onPlayBackPaused(self):
         setplaystate(2,"paused")
@@ -186,6 +195,14 @@ def processplay(data):
     except ValueError:
         player.play(data)
 
+def processvolume(data):
+    try:
+        vol = int(data)
+        setvol(vol)
+    except ValueError:
+        params=json.loads(data)
+        sendrpc("Application.SetVolume",params)
+
 def processplaybackstate(data):
     global playbackstate
     if data=="0" or data=="stop":
@@ -205,6 +222,22 @@ def processplaybackstate(data):
         player.playnext()
     elif data=="previous":
         player.playprevious()
+    elif data=="playcurrent":
+        path = xbmc.getInfoLabel('ListItem.FileNameAndPath')
+        sendrpc("Player.Open", {"item": {"file": path}})
+
+def processprogress(data):
+    hours, minutes, seconds = [int(i) for i in data.split(":")]
+    time = hours * 3600 + minutes * 60 + seconds
+    player.seekTime(time)
+
+def processsendcomand(data):
+    try:
+        cmd=json.loads(data)
+        res=xbmc.executeJSONRPC(json.dumps(cmd))
+        mqttlogging("MQTT: JSON-RPC call "+cmd['method']+" returned "+res)
+    except ValueError:
+        mqttlogging("MQTT: JSON-RPC call ValueError")
 
 def processcommand(topic,data):
     if topic=="notify":
@@ -213,6 +246,12 @@ def processcommand(topic,data):
         processplay(data)
     elif topic=="playbackstate":
         processplaybackstate(data)
+    elif topic=="progress":
+        processprogress(data)
+    elif topic=="api":
+        processsendcomand(data)
+    elif topic=="volume":
+        processvolume(data)
     else:
         mqttlogging("MQTT: Unknown command "+topic)
 
@@ -230,8 +269,9 @@ def msghandler(mqc,userdata,msg):
     except Exception as e:
         mqttlogging("MQTT: Error processing message %s: %s" % (type(e).__name__,e))
 
-def connecthandler(mqc,userdata,rc):
+def connecthandler(mqc,userdata,flags,rc):
     mqttlogging("MQTT: Connected to MQTT broker with rc=%d" % (rc))
+    mqc.publish(topic+"connected",2,qos=1,retain=True)
     mqc.subscribe(topic+"command/#",qos=0)
 
 def disconnecthandler(mqc,userdata,rc):
@@ -276,7 +316,6 @@ def startmqtt():
     else:
         mqttlogging("MQTT: No connection possible, giving up")
         return(False)
-    mqc.publish(topic+"connected",2,qos=1,retain=True)
     mqc.loop_start()
     return(True)
 

@@ -15,6 +15,12 @@ messages to MQTT topics.
 It's intended as a building block in heterogenous smart home environments where an MQTT message broker is used as the centralized message bus.
 See https://github.com/mqtt-smarthome for a rationale and architectural overview.
 
+Modifications from original owanger version:
+* Bugfix: playing/resumed events now fire consistently
+* Bugfix: Updated Paho to 1.5 to fix reconnect crash
+* Feature: All Kodi API notification events are published
+* Feature: Volume control
+
 
 Dependencies
 ------------
@@ -65,6 +71,8 @@ The addon listens to the following topics (prefixed with the configured topic pr
   a popup notification in Kodi
 * command/play: Either a simple string which is a filename or URL, or a JSON encoded object which  correspondents
   to the Player.Open() JSON_RPC call
+* command/volume: Set the volume to value or or a JSON encoded object which  correspondents
+  to the Application.SetVolume() JSON_RPC call
 * command/playbackstate: A simple string or numeric with the values:
   - "0" or "stop" to stop playback
   - "1" or "resume" or "play" to resume playback (when paused or stopped)
@@ -72,6 +80,12 @@ The addon listens to the following topics (prefixed with the configured topic pr
   - "toggle" to toggle between play and pause
   - "next" to play the next track
   - "previous" to play the previous track
+  - "playcurrent" to play the currently selected track
+* command/progress: A string having format hours:minutes:seconds. Changes position of currently played file
+* command/api: The full JSON_RPC API is accessible:
+  - {"method":"GUI.ShowNotification","jsonrpc":"2.0","params":{"title":"Test Title","message":"Test Message"},"playerid":"1"}
+
+
 
 
 See also
